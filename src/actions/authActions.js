@@ -27,8 +27,5 @@ export function login(data){
             setAuthorizationToken(token)
             dispatch(setCurrentUser(jwtDecode(token)))
         })
-        .catch(err => {
-            console.log(err)
-        })
     }
 }

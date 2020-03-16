@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { login } from '../../actions/authActions';
 import PropTypes from 'prop-types';
-import { useHistory } from "react-router-dom";
+import { Link, withRouter } from 'react-router-dom';
 
 export class LoginForm extends Component {
     constructor(props){
@@ -10,7 +10,7 @@ export class LoginForm extends Component {
         this.state = {
             correo: '',
             clave: '',
-            errors: {},
+            datosIncorrectos: false,
             isLoading: false
         }
         this.onSubmit = this.onSubmit.bind(this)
@@ -19,14 +19,21 @@ export class LoginForm extends Component {
 
     onSubmit = (e) => {
         e.preventDefault();
-        this.setState({ isLoading: true })
+
+        this.setState({ isLoading: true, datosIncorrectos: false })
         this.props.login(this.state)
         .then(res => {
-            console.log(res)
             this.setState({isLoading: false})
+            this.props.history.push('/home')
         })
         .catch(err => {
-            console.log(err)
+            if(err.response.status === 400){
+                this.setState({ datosIncorrectos: true, isLoading: false})
+            }
+            else{
+                console.log(err)
+                this.setState({ isLoading: false})
+            }
         })
     }
 
@@ -35,7 +42,14 @@ export class LoginForm extends Component {
     }
 
     render() {
-        const { errors, correo, clave, isLoading } = this.state
+        const { datosIncorrectos, correo, clave, isLoading } = this.state
+
+        const mensajeError = (
+            <div className="alert alert-danger" role="alert">
+                Correo y/o contraseña incorrectos
+            </div>
+        )
+
         return (
             <form onSubmit={this.onSubmit}>
                 <div className="card">
@@ -43,6 +57,8 @@ export class LoginForm extends Component {
                         <h1>Iniciar Sesión</h1>
                     </div>
                     <div className="card-body">
+                        {datosIncorrectos ? mensajeError : ''}
+
                         <div className="form-group">
                             <label>Correo</label>
                             <input className="form-control" type="text" name="correo" value={correo} onChange={this.onChange} />
@@ -50,12 +66,15 @@ export class LoginForm extends Component {
 
                         <div className="form-group">
                             <label>Clave</label>
-                            <input className="form-control" type="text" name="clave" value={clave} onChange={this.onChange} />
+                            <input className="form-control" type="password" name="clave" value={clave} onChange={this.onChange} />
                         </div>
 
                         <div className="text-right">
                             <button className="btn btn-primary" type="submit" disabled={isLoading}>Entrar</button>
                         </div>
+
+
+                        <p><Link to="/register">Registrarse</Link></p>
                     </div>
                 </div>
             </form>
@@ -67,4 +86,4 @@ LoginForm.protoTypes = {
     login: PropTypes.func.isRequired
 }
 
-export default connect(null, {login})(LoginForm);
+export default withRouter(connect(null, {login})(LoginForm));
